@@ -106,13 +106,6 @@ def plot_3D(*opts, fxn_name, animate_gif=True, f_name='v1'):
                 plt.legend(loc="upper center", ncol=4)
         return lines
 
-    # Plot 3D Surface
-    fig = plt.figure(figsize=(9.6,6.4))
-    ax = plt.axes(projection='3d', azim = 245)
-    plt.tight_layout()
-
-    data, minima, x_lims, y_lims = plot_fxn(fxn_name, '3D')
-
     # Get data
     xlist, ylist, zlist, nn, dp = get_dlists(opts)
     n = len(opts)
@@ -121,12 +114,28 @@ def plot_3D(*opts, fxn_name, animate_gif=True, f_name='v1'):
         x2 = np.rint(np.linspace(0, len(xlist[1]), endpoint = False, num = 200))
         c = cm.jet(np.linspace(0,1,n))
         g = 0.4
+        rot_val = 245
+        nr = colors.PowerNorm(gamma=g)
+    elif fxn_name == 'saddle':
+        rot_val = -60
+        nr = None
+        x2 = np.rint(np.linspace(0, len(xlist[1]), endpoint = False, num = 100))
+        c = cm.rainbow(np.linspace(0,1,n))
     else:
         x2 = np.rint(np.linspace(0, len(xlist[1]), endpoint = False, num = 200))
         c = cm.rainbow(np.linspace(0,1,n))
         g = 0.25
+        rot_val = 245
+        nr = colors.PowerNorm(gamma=g)
 
-    ax.plot_surface(*data, rstride=1, cstride=1, norm=colors.PowerNorm(gamma=g), cmap='viridis', edgecolor='none', alpha = 1.0)
+    # Plot 3D Surface
+    fig = plt.figure(figsize=(9.6,6.4))
+    ax = plt.axes(projection='3d', azim = rot_val)
+    plt.tight_layout()
+
+    data, minima, x_lims, y_lims = plot_fxn(fxn_name, '3D')
+
+    ax.plot_surface(*data, rstride=1, cstride=1, norm=nr, cmap='viridis', edgecolor='none', alpha = 1.0)
     ax.plot(*minima, 'x', markersize=12, mew=2, color='k')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
@@ -193,6 +202,13 @@ def plot_fxn(fxn_name, p_type=None):
         minm = np.array([[1.0], [1.0], [0.0]])
         x_lim = (-.5, 2.0) # min, max  (-.5, 2.0, 100)
         y_lim = (-1.5, 4.0)
+    elif fxn_name == "saddle":
+        saddle_fxn = lambda x, y : (x)**2 - (y)**2
+        X, Y = np.meshgrid(np.linspace(-4.5, 4.5, 50), np.linspace(-4.5, 4.5, 50))
+        Z = saddle_fxn(X, Y)
+        x_lim = (-4.5, 4.5)
+        y_lim = (-4.5, 4.5)
+        minm = np.array([[], [], []])
     else:
         raise NameError('No valid function found.')
     return (X, Y, Z), minm, x_lim, y_lim

@@ -4,6 +4,7 @@ from autograd import grad
 beale_fxn = lambda x, y : (1.5 - x + x*y)**2 + (2.25 - x + x*y**2)**2 + (2.625 - x + x*y**3)**2
 a, b = 1, 100
 rosenbrock_fxn = lambda x, y : (1 - x)**2 + 100*(y - x**2)**2
+saddle_fxn = lambda x, y : (x)**2 - (y)**2
 r = lambda num: round(num, 6)
 
 '''
@@ -39,7 +40,7 @@ class Optimizer:
         if alpha != None:
             self.alpha = alpha
 
-        # print(x, y) 
+        # print(x, y)
 
         p_val = 0.000001
         x_hist = [x]
