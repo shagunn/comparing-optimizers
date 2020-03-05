@@ -3,7 +3,7 @@ from autograd import grad
 
 beale_fxn = lambda x, y : (1.5 - x + x*y)**2 + (2.25 - x + x*y**2)**2 + (2.625 - x + x*y**3)**2
 a, b = 1, 100
-rosenbrock_fxn = lambda x, y : (a - x)**2 + b*(y - x**2)**2
+rosenbrock_fxn = lambda x, y : (1 - x)**2 + 100*(y - x**2)**2
 r = lambda num: round(num, 6)
 
 '''
@@ -33,13 +33,13 @@ class Optimizer:
 #         z1 = self.fxn(np.array(x_list), np.array(y_list))
 #         print(z)
 
-    def run_optimizer(self, x, y, niter=3000, alpha=None, print_after=None, return_var=False):
+    def run_optimizer(self, x, y, niter=3000, alpha=None, print_after=None, cc=True, return_var=False):
         if print_after == None:
              print_after = niter/10
         if alpha != None:
             self.alpha = alpha
 
-        print(x, y)
+        # print(x, y) 
 
         p_val = 0.000001
         x_hist = [x]
@@ -54,9 +54,10 @@ class Optimizer:
             if k % print_after == 0:
                 print ('iteration: {}  x: {} y: {} dx: {} dy: {}'.format(k, r(x), r(y), r(dx), r(dy)))
 
-            if abs(x_hist[k+1] - x_hist[k]) < p_val and abs(y_hist[k+1] - y_hist[k]) < p_val:
-                print ('{} reached minimum at iteration: {}'.format(self.name, k))
-                break
+            if cc == True:
+                if abs(x_hist[k+1] - x_hist[k]) < p_val and abs(y_hist[k+1] - y_hist[k]) < p_val:
+                    print ('{} reached minimum at iteration: {}'.format(self.name, k))
+                    break
 #             grad(i) = 0.0001
 #             grad(i+1) = 0.000099989 <-- grad has changed less than 0.01% => STOP
 
@@ -81,7 +82,7 @@ class SGD(Optimizer):
     def __init__(self, fxn):
         super().__init__(fxn)
         self.alpha = 0.01
-        self.name = 'SGD'
+        self.name = 'GD'
 
     def step(self, x, y, dx, dy):
         x -= self.alpha * dx
@@ -97,7 +98,7 @@ class SGD_momentum(Optimizer):
         self.vx = 0
         self.vy = 0
         self.beta = beta
-        self.name = 'SGD_momentum'
+        self.name = 'Momentum'
 
     def step(self, x, y, dx, dy):
         self.vx = self.beta * self.vx + self.alpha * dx
@@ -197,10 +198,10 @@ class RMSprop(Optimizer):
         self.epsilon = epsilon
 
     def step(self, x, y, dx, dy):
-        self.cache_x = self.cache_x * epsilon + (1-epsilon) * dx**2
+        self.cache_x = self.cache_x * self.epsilon + (1-self.epsilon) * dx**2
         x -=  dx * self.alpha / (np.sqrt(self.cache_x + self.epsilon))
 
-        self.cache_y = self.cache_y * epsilon + (1-epsilon) * dy**2
+        self.cache_y = self.cache_y * self.epsilon + (1-self.epsilon) * dy**2
         y -= dy * self.alpha / (np.sqrt(self.cache_y + self.epsilon))
 
         return x,y
@@ -270,9 +271,8 @@ class AdaMax(Optimizer):
         # apply update
         x -= (self.alpha / (1 - self.beta1**self.t)) *  (self.m_x / self.v_x)
 
-
         self.m_y = self.m_y * self.beta1 + (1 - self.beta1) * dy
-        self.v_y = may((self.v_y * self.beta2), abs(dy))
+        self.v_y = max((self.v_y * self.beta2), abs(dy))
         y -= (self.alpha / (1 - self.beta1**self.t)) *  (self.m_y / self.v_y)
 
         return x,y
